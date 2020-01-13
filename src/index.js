@@ -43,7 +43,7 @@ app.all('/intercom', validateMiddleware, async (req, res) => {
   res.type('text/xml').status(200).send(resTwiml.toString());
 });
 
-// Incoming get/set request
+// Incoming set request
 app.all('/set', async (req, res) => {
   const secret = req.query.secret || req.body.secret;
   const unlocked = req.query.unlocked || req.body.unlocked;
@@ -53,6 +53,18 @@ app.all('/set', async (req, res) => {
   } else {
     writeState(['true', '1', 'yes', 'unlocked'].indexOf(unlocked) >= 0);
     res.type('json').send(JSON.stringify({ success: true, message: 'ok' }));
+  }
+});
+
+// Incoming get request
+app.all('/get', async (req, res) => {
+  const secret = req.query.secret || req.body.secret;
+  const state = await readState();
+
+  if (secret !== sharedSecret) {
+    res.type('json').status(403).send(JSON.stringify({ success: false, message: 'incorrect secret'}));
+  } else {
+    res.type('json').send(JSON.stringify({ success: true, message: 'ok', unlocked: state.unlocked }));
   }
 });
 
